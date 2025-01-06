@@ -2,21 +2,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement; // Für den Szenen-Neustart
 using UnityEngine.UI; // Für UI-Elemente
 
-public class PlayerCollision : MonoBehaviour
+public class FallDetector : MonoBehaviour
 {
     [SerializeField] private GameObject gameOverUI; // Game Over UI, das in Unity verbunden wird
 
-    private void Start()
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        // Game Over UI zu Beginn des Spiels deaktivieren
-        gameOverUI.SetActive(false);
-    }
-
-    private void OnCollisionEnter2D(Collision2D other)
-    {
-        if (other.transform.CompareTag("Obstacle"))
+        if (other.CompareTag("Player"))
         {
-            Debug.Log("Player hit an obstacle!");
+            Debug.Log("Player fell!");
             OnPlayerFail();
         }
     }

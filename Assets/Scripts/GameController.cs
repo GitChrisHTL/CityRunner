@@ -38,15 +38,15 @@ public class GameController : MonoBehaviour
     }
 
     private GameObject[] FindObjectsInLayer(LayerMask layer)
+    {   
+    List<GameObject> objects = new List<GameObject>();
+    foreach (GameObject obj in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
     {
-        List<GameObject> objects = new List<GameObject>();
-        foreach (GameObject obj in FindObjectsOfType<GameObject>())
+        if (((1 << obj.layer) & layer) != 0)
         {
-            if (((1 << obj.layer) & layer) != 0)
-            {
-                objects.Add(obj);
-            }
+            objects.Add(obj);
         }
-        return objects.ToArray();
+    }
+    return objects.ToArray();
     }
 }
