@@ -6,6 +6,7 @@ public class PlayerCollision : MonoBehaviour
 {
     [SerializeField] private GameObject gameOverUI; // Game Over UI, das in Unity verbunden wird
 
+    public CoinController coinController;
     private void Start()
     {
         // Game Over UI zu Beginn des Spiels deaktivieren
@@ -18,6 +19,10 @@ public class PlayerCollision : MonoBehaviour
         {
             Debug.Log("Player hit an obstacle!");
             OnPlayerFail();
+        } else if (other.transform.CompareTag("Coin"))
+        {
+            Destroy(other.gameObject);
+            coinController.coinCount++;
         }
     }
 

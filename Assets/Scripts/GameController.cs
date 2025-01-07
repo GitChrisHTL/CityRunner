@@ -9,6 +9,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private LayerMask backgroundLayer; // Layer für den Hintergrund
     [SerializeField] private LayerMask groundLayer;     // Layer für den Boden
     [SerializeField] private LayerMask obstacleLayer;   // Layer für die Hindernisse
+    [SerializeField] private LayerMask collectableLayer;   // Layer für die Collectables
 
     private void Update()
     {
@@ -26,6 +27,9 @@ public class GameController : MonoBehaviour
 
         // Alle Objekte im "Obstacle" Layer bewegen
         MoveObjectsInLayer(obstacleLayer);
+
+        // Alle Objekte im "Collectable" Layer bewegen
+        MoveObjectsInLayer(collectableLayer);
     }
 
     private void MoveObjectsInLayer(LayerMask layer)
