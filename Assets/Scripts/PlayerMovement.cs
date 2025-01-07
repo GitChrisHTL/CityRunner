@@ -24,7 +24,16 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         // SpriteRenderer der GFX-Komponente holen
-        spriteRenderer = GFX.GetComponent<SpriteRenderer>();
+        if (GFX != null)
+        {
+            spriteRenderer = GFX.GetComponent<SpriteRenderer>();
+        }
+
+        if (spriteRenderer == null)
+        {
+            Debug.LogError("SpriteRenderer konnte nicht gefunden werden! Überprüfe, ob GFX eine Komponente mit SpriteRenderer ist.");
+        }
+
         frameTimer = frameTime; // Timer initialisieren
 
         if (runSprites == null || runSprites.Length == 0)
@@ -83,6 +92,7 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateRunAnimation()
     {
         if (runSprites == null || runSprites.Length == 0) return; // Schutz vor leeren Arrays
+        if (spriteRenderer == null) return; // Schutz vor fehlendem SpriteRenderer
 
         // Timer für die Animation
         frameTimer -= Time.deltaTime;
@@ -92,6 +102,8 @@ public class PlayerMovement : MonoBehaviour
             // Zum nächsten Frame wechseln
             currentFrame = (currentFrame + 1) % runSprites.Length; // Loop durch das Array
             spriteRenderer.sprite = runSprites[currentFrame];
+
+            Debug.Log($"Sprite gewechselt zu: {runSprites[currentFrame].name}");
 
             // Timer zurücksetzen
             frameTimer = frameTime;
