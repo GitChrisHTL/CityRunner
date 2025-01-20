@@ -22,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isGrounded = false;
     private bool isJumping = false;
+    private bool isSliding = false;
     private float jumpTimer;
 
     private void Start()
@@ -75,6 +76,23 @@ public class PlayerMovement : MonoBehaviour
         {
             isJumping = false;
             jumpTimer = 0;
+        }
+        #endregion
+
+        #region Sliding
+        if (isGrounded && Input.GetButtonDown("Slide"))
+        {
+            isSliding = true;
+        }
+
+        if (Input.GetButtonDown("Slide"))
+        {
+            GFX.localScale = new Vector3(GFX.localScale.x, 0.3f, GFX.localScale.z);
+        }
+
+        if (Input.GetButtonUp("Slide"))
+        {
+            GFX.localScale = new Vector3(GFX.localScale.x, 1f, GFX.localScale.z);
         }
         #endregion
 
