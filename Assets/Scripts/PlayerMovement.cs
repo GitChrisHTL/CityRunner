@@ -12,7 +12,10 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Running Animation")]
     [SerializeField] private Sprite[] runSprites;  // Array der Laufanimation-Sprites (Player_Run1 bis Player_Run5)
+    [SerializeField] private Sprite[] jumpSprites;  // Array der Jumpanimation-Sprites (Player_Jump1 bis Player_Jump5)
+    [SerializeField] private Sprite[] fallSprites;  // Array der Fallanimation-Sprites (Player_Fall1 bis Player_Fall3)
     [SerializeField] private float frameTime = 0.1f; // Zeit zwischen Frames
+    [SerializeField] private GameObject player;
     private SpriteRenderer spriteRenderer;
     private int currentFrame = 0;
     private float frameTimer;
@@ -26,7 +29,7 @@ public class PlayerMovement : MonoBehaviour
         // SpriteRenderer der GFX-Komponente holen
         if (GFX != null)
         {
-            spriteRenderer = GFX.GetComponent<SpriteRenderer>();
+            spriteRenderer = player.GetComponent<SpriteRenderer>();
         }
 
         if (spriteRenderer == null)
@@ -64,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 isJumping = false;
+                UpdateFallAnimation();
             }
         }
 
@@ -74,17 +78,24 @@ public class PlayerMovement : MonoBehaviour
         }
         #endregion
 
-        #region Sliding
-        if (isGrounded && Input.GetButton("Slide"))
-        {
-            // Sliding-Logik hinzufügen
-        }
-        #endregion
-
         #region Running Animation
         if (isGrounded && !isJumping)
         {
             UpdateRunAnimation();
+        }
+        #endregion
+
+        #region Jumping Animation
+        if (!isGrounded && isJumping)
+        {
+            UpdateJumpAnimation();
+        }
+        #endregion
+
+        #region Falling Animation
+        if (!isGrounded && !isJumping)
+        {
+            UpdateFallAnimation();
         }
         #endregion
     }
@@ -106,6 +117,47 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log($"Sprite gewechselt zu: {runSprites[currentFrame].name}");
 
             // Timer zurücksetzen
+            frameTimer = frameTime;
+        }
+    }
+
+    private void UpdateJumpAnimation()
+{
+    if (jumpSprites == null || jumpSprites.Length == 0) return;
+    if (spriteRenderer == null) return;
+
+    // Wenn die Animation noch nicht abgeschlossen ist
+    if (currentFrame < jumpSprites.Length - 1)
+    {
+        frameTimer -= Time.deltaTime;
+
+        // Wenn der Timer abgelaufen ist, zum nächsten Frame wechseln
+        if (frameTimer <= 0f)
+        {
+            currentFrame = (currentFrame + 1) % jumpSprites.Length;
+            spriteRenderer.sprite = jumpSprites[currentFrame];
+            frameTimer = frameTime;  // Timer zurücksetzen
+        }
+    }
+    else
+    {
+        // Die Sprunganimation ist abgeschlossen, wir bleiben im letzten Frame
+        spriteRenderer.sprite = jumpSprites[jumpSprites.Length - 1];
+    }
+}
+
+
+    private void UpdateFallAnimation()
+    {
+        if (fallSprites == null || fallSprites.Length == 0) return;
+        if (spriteRenderer == null) return;
+
+        frameTimer -= Time.deltaTime;
+
+        if (frameTimer <= 0f)
+        {
+            currentFrame = (currentFrame + 1) % fallSprites.Length;
+            spriteRenderer.sprite = fallSprites[currentFrame];
             frameTimer = frameTime;
         }
     }
