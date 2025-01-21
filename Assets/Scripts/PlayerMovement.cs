@@ -4,179 +4,164 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Transform GFX;
-    [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private Sprite[] runSprites, jumpSprites, fallSprites;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform feetPos;
-    [SerializeField] private float groundDistance = 0.25f;
-    [SerializeField] private float jumpTime = 0.3f;
-
-    [Header("Running Animation")]
-    [SerializeField] private Sprite[] runSprites;  // Array der Laufanimation-Sprites (Player_Run1 bis Player_Run5)
-    [SerializeField] private Sprite[] jumpSprites;  // Array der Jumpanimation-Sprites (Player_Jump1 bis Player_Jump5)
-    [SerializeField] private Sprite[] fallSprites;  // Array der Fallanimation-Sprites (Player_Fall1 bis Player_Fall3)
-    [SerializeField] private float frameTime = 0.1f; // Zeit zwischen Frames
+    [SerializeField] private float jumpForce = 10f, groundDistance = 0.25f, frameTime = 0.1f, jumpTime = 0.3f;
     [SerializeField] private GameObject player;
-    private SpriteRenderer spriteRenderer;
-    private int currentFrame = 0;
-    private float frameTimer;
 
-    private bool isGrounded = false;
-    private bool isJumping = false;
-    private bool isSliding = false;
-    private float jumpTimer;
+    private SpriteRenderer spriteRenderer;
+    private bool isGrounded, isJumping, isSliding;
+    private int currentFrame = 0;
+    private float frameTimer, jumpTimer;
+    private Sprite[] currentAnimationSprites;
+    private bool jumpAnimationComplete = false;
 
     private void Start()
     {
-        // SpriteRenderer der GFX-Komponente holen
-        if (GFX != null)
-        {
-            spriteRenderer = player.GetComponent<SpriteRenderer>();
-        }
-
+        spriteRenderer = player.GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            Debug.LogError("SpriteRenderer konnte nicht gefunden werden! Überprüfe, ob GFX eine Komponente mit SpriteRenderer ist.");
+            Debug.LogError("SpriteRenderer konnte nicht gefunden werden! Stelle sicher, dass GFX einen SpriteRenderer besitzt.");
         }
 
-        frameTimer = frameTime; // Timer initialisieren
-
-        if (runSprites == null || runSprites.Length == 0)
-        {
-            Debug.LogError("Run Sprites wurden nicht im Inspektor gesetzt!");
-        }
+        frameTimer = frameTime;
     }
 
     private void Update()
     {
-        // Prüfen, ob der Spieler auf dem Boden ist
         isGrounded = Physics2D.OverlapCircle(feetPos.position, groundDistance, groundLayer);
+        HandleJump();
+        HandleSlide();
+        UpdateAnimations();
+    }
 
-        #region Jumping 
+    private void HandleJump()
+    {
         if (isGrounded && Input.GetButtonDown("Jump"))
         {
             isJumping = true;
+            jumpTimer = 0;
             rb.linearVelocity = Vector2.up * jumpForce;
+            ResetJumpAnimation();
         }
 
-        if (isJumping && Input.GetButton("Jump"))
+        if (isJumping && Input.GetButton("Jump") && jumpTimer < jumpTime)
         {
-            if (jumpTimer < jumpTime)
-            {
-                rb.linearVelocity = Vector2.up * jumpForce;
-                jumpTimer += Time.deltaTime;
-            }
-            else
-            {
-                isJumping = false;
-                UpdateFallAnimation();
-            }
+            rb.linearVelocity = Vector2.up * jumpForce;
+            jumpTimer += Time.deltaTime;
         }
 
-        if (Input.GetButtonUp("Jump"))
+        if (Input.GetButtonUp("Jump") || jumpTimer >= jumpTime)
         {
             isJumping = false;
-            jumpTimer = 0;
         }
-        #endregion
+    }
 
-        #region Sliding
-        if (isGrounded && Input.GetButtonDown("Slide"))
-        {
-            isSliding = true;
-        }
-
+    private void HandleSlide()
+    {
         if (Input.GetButtonDown("Slide"))
         {
+            isSliding = true;
             GFX.localScale = new Vector3(GFX.localScale.x, 0.3f, GFX.localScale.z);
         }
 
         if (Input.GetButtonUp("Slide"))
         {
+            isSliding = false;
             GFX.localScale = new Vector3(GFX.localScale.x, 1f, GFX.localScale.z);
         }
-        #endregion
+    }
 
-        #region Running Animation
+    private void UpdateAnimations()
+    {
         if (isGrounded && !isJumping)
         {
-            UpdateRunAnimation();
+            SwitchAnimation(runSprites);
         }
-        #endregion
-
-        #region Jumping Animation
-        if (!isGrounded && isJumping)
+        else if (isJumping)
         {
-            UpdateJumpAnimation();
+            if (currentAnimationSprites != jumpSprites)
+            {
+                SwitchAnimation(jumpSprites);
+            }
         }
-        #endregion
-
-        #region Falling Animation
-        if (!isGrounded && !isJumping)
+        else if (!isGrounded && !isJumping)
         {
-            UpdateFallAnimation();
+            SwitchAnimation(fallSprites);
         }
-        #endregion
+
+        UpdateAnimation(currentAnimationSprites);
     }
 
-    private void UpdateRunAnimation()
+    private void SwitchAnimation(Sprite[] newAnimation)
     {
-        if (runSprites == null || runSprites.Length == 0) return; // Schutz vor leeren Arrays
-        if (spriteRenderer == null) return; // Schutz vor fehlendem SpriteRenderer
+        if (currentAnimationSprites != newAnimation)
+        {
+            currentAnimationSprites = newAnimation;
+            currentFrame = 0;
+            frameTimer = frameTime;
+            spriteRenderer.sprite = currentAnimationSprites[currentFrame];
+        }
+    }
 
-        // Timer für die Animation
+    private void UpdateAnimation(Sprite[] sprites)
+    {
+        if (sprites == null || sprites.Length == 0 || spriteRenderer == null)
+        {
+            Debug.LogError("Animation konnte nicht aktualisiert werden: sprites ist null oder leer.");
+            return;
+        }
+
         frameTimer -= Time.deltaTime;
 
         if (frameTimer <= 0f)
         {
-            // Zum nächsten Frame wechseln
-            currentFrame = (currentFrame + 1) % runSprites.Length; // Loop durch das Array
-            spriteRenderer.sprite = runSprites[currentFrame];
+            if (sprites == jumpSprites)
+            {
+                if (jumpAnimationComplete)
+                {
+                    return;
+                }
 
-            Debug.Log($"Sprite gewechselt zu: {runSprites[currentFrame].name}");
+                if (currentFrame >= 4) // Bis Bild 5 stoppen (Index 4)
+                {
+                    spriteRenderer.sprite = sprites[4];
+                    jumpAnimationComplete = true;
+                    return;
+                }
+            }
 
-            // Timer zurücksetzen
+            if (currentFrame >= sprites.Length)
+            {
+                currentFrame = 0;
+            }
+
+            spriteRenderer.sprite = sprites[currentFrame];
+            currentFrame++;
             frameTimer = frameTime;
         }
     }
 
-    private void UpdateJumpAnimation()
-{
-    if (jumpSprites == null || jumpSprites.Length == 0) return;
-    if (spriteRenderer == null) return;
-
-    // Wenn die Animation noch nicht abgeschlossen ist
-    if (currentFrame < jumpSprites.Length - 1)
+    private void ResetJumpAnimation()
     {
-        frameTimer -= Time.deltaTime;
+        jumpAnimationComplete = false;
+        currentFrame = 0;
+    }
 
-        // Wenn der Timer abgelaufen ist, zum nächsten Frame wechseln
-        if (frameTimer <= 0f)
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Finish"))
         {
-            currentFrame = (currentFrame + 1) % jumpSprites.Length;
-            spriteRenderer.sprite = jumpSprites[currentFrame];
-            frameTimer = frameTime;  // Timer zurücksetzen
+            StopGame();
         }
     }
-    else
+
+    private void StopGame()
     {
-        // Die Sprunganimation ist abgeschlossen, wir bleiben im letzten Frame
-        spriteRenderer.sprite = jumpSprites[jumpSprites.Length - 1];
-    }
-}
-
-
-    private void UpdateFallAnimation()
-    {
-        if (fallSprites == null || fallSprites.Length == 0) return;
-        if (spriteRenderer == null) return;
-
-        frameTimer -= Time.deltaTime;
-
-        if (frameTimer <= 0f)
-        {
-            currentFrame = (currentFrame + 1) % fallSprites.Length;
-            spriteRenderer.sprite = fallSprites[currentFrame];
-            frameTimer = frameTime;
-        }
+        spriteRenderer.sprite = null;
+        this.enabled = false;
+        Time.timeScale = 0f;
+        Debug.Log("Spiel beendet!");
     }
 }
