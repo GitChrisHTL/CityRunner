@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
 
 public class GameOver : MonoBehaviour
@@ -27,12 +28,12 @@ public class GameOver : MonoBehaviour
 
     public void QuitGame()
     {
-        if(UnityEditor.EditorApplication.isPlaying)
+        /*if(EditorApplication.isPlaying) Auskommentiert, da "Build" ansonsten nicht funktioniert
         {
-            UnityEditor.EditorApplication.isPlaying = false;
+            EditorApplication.isPlaying = false;
         } else
-        {
+        {*/
             Application.Quit();
-        }
+        //}
     }
 }

@@ -11,7 +11,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private GameObject player;
 
     private SpriteRenderer spriteRenderer;
-    private bool isGrounded, isJumping, isSliding;
+    private bool isGrounded, isJumping;
     private int currentFrame = 0;
     private float frameTimer, jumpTimer;
     private Sprite[] currentAnimationSprites;
@@ -62,13 +62,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Input.GetButtonDown("Slide"))
         {
-            isSliding = true;
+            //isSliding = true;
             GFX.localScale = new Vector3(GFX.localScale.x, 0.3f, GFX.localScale.z);
         }
 
         if (Input.GetButtonUp("Slide"))
         {
-            isSliding = false;
+            //isSliding = false;
             GFX.localScale = new Vector3(GFX.localScale.x, 1f, GFX.localScale.z);
         }
     }
