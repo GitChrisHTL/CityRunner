@@ -10,6 +10,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpForce = 10f, groundDistance = 0.25f, frameTime = 0.1f, jumpTime = 0.3f;
     [SerializeField] private GameObject player;
 
+    [SerializeField] private GameObject gameFinishedUI;
+    [SerializeField] private GameObject oneStar;
+    [SerializeField] private GameObject twoStar;
+    [SerializeField] private GameObject threeStar;
+    public CoinController coinController;
+
     private SpriteRenderer spriteRenderer;
     private bool isGrounded, isJumping;
     private int currentFrame = 0;
@@ -26,13 +32,18 @@ public class PlayerMovement : MonoBehaviour
         }
 
         frameTimer = frameTime;
+
+        gameFinishedUI.SetActive(false);
+        oneStar.SetActive(false);
+        twoStar.SetActive(false);
+        threeStar.SetActive(false);
     }
 
     private void Update()
     {
         isGrounded = Physics2D.OverlapCircle(feetPos.position, groundDistance, groundLayer);
         HandleJump();
-        HandleSlide();
+        //HandleSlide();
         UpdateAnimations();
     }
 
@@ -58,7 +69,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void HandleSlide()
+    /*private void HandleSlide()
     {
         if (Input.GetButtonDown("Slide"))
         {
@@ -71,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
             //isSliding = false;
             GFX.localScale = new Vector3(GFX.localScale.x, 1f, GFX.localScale.z);
         }
-    }
+    }*/
 
     private void UpdateAnimations()
     {
@@ -162,6 +173,17 @@ public class PlayerMovement : MonoBehaviour
         spriteRenderer.sprite = null;
         this.enabled = false;
         Time.timeScale = 0f;
+        gameFinishedUI.SetActive(true);
+        if (coinController.coinCount == 20) {
+            oneStar.SetActive(true);
+            twoStar.SetActive(true);
+            threeStar.SetActive(true);
+        } else if (coinController.coinCount >= 12 && coinController.coinCount < 20) {
+            oneStar.SetActive(true);
+            twoStar.SetActive(true);
+        } else if (coinController.coinCount >= 6 && coinController.coinCount < 12) {
+            oneStar.SetActive(true);
+        }
         Debug.Log("Spiel beendet!");
     }
 }
